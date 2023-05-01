@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33530.505
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrucibleContactPro", "CrucibleContactPro.csproj", "{81D8D781-4BE7-4D1C-A78D-09140A6A84DC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{81D8D781-4BE7-4D1C-A78D-09140A6A84DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81D8D781-4BE7-4D1C-A78D-09140A6A84DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81D8D781-4BE7-4D1C-A78D-09140A6A84DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81D8D781-4BE7-4D1C-A78D-09140A6A84DC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F4F09DF0-BFD9-4BC3-8FA0-9390AFB9B863}
+	EndGlobalSection
+EndGlobal
