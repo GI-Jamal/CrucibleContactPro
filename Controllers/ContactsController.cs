@@ -86,7 +86,7 @@ namespace CrucibleContactPro.Controllers
 
                 contact.CreatedDate = DateTime.UtcNow;
 
-                if(contact.ImageFile != null)
+                if (contact.ImageFile != null)
                 {
                     contact.ImageBytes = await _imageService.ConvertFileToByteArrayAsync(contact.ImageFile);
                     contact.ImageType = contact.ImageFile.ContentType;
@@ -131,7 +131,7 @@ namespace CrucibleContactPro.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,CreatedDate,AppUserId,FirstName,LastName,DateOfBirth,Address1,Address2,City,State,ZipCode,EmailAddress,PhoneNumber,ImageBytes,ImageType")] Contact contact)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CreatedDate,AppUserId,FirstName,LastName,DateOfBirth,Address1,Address2,City,State,ZipCode,EmailAddress,PhoneNumber,ImageFile")] Contact contact)
         {
             if (id != contact.Id)
             {
@@ -147,6 +147,12 @@ namespace CrucibleContactPro.Controllers
                     if (contact.DateOfBirth != null)
                     {
                         contact.DateOfBirth = DateTime.SpecifyKind(contact.DateOfBirth.Value, DateTimeKind.Utc);
+                    }
+
+                    if (contact.ImageFile != null)
+                    {
+                        contact.ImageBytes = await _imageService.ConvertFileToByteArrayAsync(contact.ImageFile);
+                        contact.ImageType = contact.ImageFile.ContentType;
                     }
 
                     _context.Update(contact);
