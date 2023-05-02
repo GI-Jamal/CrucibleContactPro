@@ -61,8 +61,15 @@ namespace CrucibleContactPro.Controllers
         }
 
         // GET: Contacts/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            string? appUserId = _userManager.GetUserId(User);
+
+            IEnumerable<Category> categories = await _context.Categories.Where(c => c.AppUserId == appUserId).ToListAsync();
+
+
+            ViewData["CategoryList"] = new MultiSelectList(categories, "Id", "CategoryName");
+
             ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>());
 
             Contact contact = new Contact();
@@ -75,7 +82,7 @@ namespace CrucibleContactPro.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("FirstName,LastName,DateOfBirth,Address1,Address2,City,State,ZipCode,EmailAddress,PhoneNumber,ImageFile")] Contact contact)
+        public async Task<IActionResult> Create([Bind("FirstName,LastName,DateOfBirth,Address1,Address2,City,State,ZipCode,EmailAddress,PhoneNumber,ImageFile")] Contact contact, IEnumerable<int> selected)
         {
 
             ModelState.Remove("AppUserId");
@@ -100,9 +107,23 @@ namespace CrucibleContactPro.Controllers
 
                 _context.Add(contact);
                 await _context.SaveChangesAsync();
+
+                // Add categories to the Contact
+                // TODO: Add as a service call
+
+                foreach (int categoryId in selected)
+                {
+                    Category? category = await _context.Categories.FindAsync(categoryId);
+
+                    if (contact != null && category != null)
+                    {
+                        contact.Categories.Add(category);
+                    }
+                }
+                
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", contact.AppUserId);
             return View(contact);
         }
 
@@ -123,6 +144,7 @@ namespace CrucibleContactPro.Controllers
                 return NotFound();
             }
             ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>());
+            ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", contact.AppUserId);
             return View(contact);
         }
 
@@ -131,7 +153,7 @@ namespace CrucibleContactPro.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,CreatedDate,AppUserId,FirstName,LastName,DateOfBirth,Address1,Address2,City,State,ZipCode,EmailAddress,PhoneNumber,ImageFile")] Contact contact)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CreatedDate,AppUserId,FirstName,LastName,DateOfBirth,Address1,Address2,City,State,ZipCode,EmailAddress,PhoneNumber,ImageBytes,ImageType,ImageFile")] Contact contact)
         {
             if (id != contact.Id)
             {

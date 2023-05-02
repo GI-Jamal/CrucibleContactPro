@@ -19,8 +19,10 @@ namespace CrucibleContactPro.Models
         [NotMapped]
         public string? Fullname { get { return $"{FirstName} {LastName}"; } }
 
-        // Add Contacts
+        // Navigation Properties
+        
+        public virtual ICollection<Contact> Contacts { get; set; } = new HashSet<Contact>();
 
-        // Add Categories
+        public virtual ICollection<Category> Categories { get; set; } = new HashSet<Category>();
     }
 }
