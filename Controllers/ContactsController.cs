@@ -21,13 +21,15 @@ namespace CrucibleContactPro.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
         private readonly IImageService _imageService;
+        private readonly IAddressBookService _addressBookService;
 
         // Dependency Injection
-        public ContactsController(ApplicationDbContext context, UserManager<AppUser> userManager, IImageService imageService)
+        public ContactsController(ApplicationDbContext context, UserManager<AppUser> userManager, IImageService imageService, IAddressBookService addressBookService)
         {
             _context = context;
             _userManager = userManager;
             _imageService = imageService;
+            _addressBookService = addressBookService;
         }
 
         // GET: Contacts
@@ -36,7 +38,7 @@ namespace CrucibleContactPro.Controllers
             string? appUserId = _userManager.GetUserId(User);
 
             List<Contact> contacts = new List<Contact>();
-            contacts = await _context.Contacts.Where(c => c.AppUserId == appUserId).Include(c => c.AppUser).ToListAsync();
+            contacts = await _context.Contacts.Where(c => c.AppUserId == appUserId).Include(c => c.AppUser).Include(c => c.Categories).ToListAsync();
 
             return View(contacts);
         }
@@ -63,12 +65,7 @@ namespace CrucibleContactPro.Controllers
         // GET: Contacts/Create
         public async Task<IActionResult> Create()
         {
-            string? appUserId = _userManager.GetUserId(User);
-
-            IEnumerable<Category> categories = await _context.Categories.Where(c => c.AppUserId == appUserId).ToListAsync();
-
-
-            ViewData["CategoryList"] = new MultiSelectList(categories, "Id", "CategoryName");
+            ViewData["CategoryList"] = await GetCategoriesListAsync();
 
             ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>());
 
@@ -109,21 +106,14 @@ namespace CrucibleContactPro.Controllers
                 await _context.SaveChangesAsync();
 
                 // Add categories to the Contact
-                // TODO: Add as a service call
-
-                foreach (int categoryId in selected)
-                {
-                    Category? category = await _context.Categories.FindAsync(categoryId);
-
-                    if (contact != null && category != null)
-                    {
-                        contact.Categories.Add(category);
-                    }
-                }
+                await _addressBookService.AddCategoriesToContactAsync(selected, contact.Id);
                 
-                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+           
+            ViewData["CategoryList"] = await GetCategoriesListAsync(selected);
+            ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>());
+
             return View(contact);
         }
 
@@ -136,15 +126,17 @@ namespace CrucibleContactPro.Controllers
                 return NotFound();
             }
 
-            Contact? contact = await _context.Contacts.FindAsync(id);
+            Contact? contact = await _context.Contacts.Include(c => c.Categories).FirstOrDefaultAsync(c => c.Id == id);
 
             // Second Check
             if (contact == null)
             {
                 return NotFound();
             }
+
+            ViewData["CategoryList"] = await GetCategoriesListAsync(contact.Categories.Select(c => c.Id));
             ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>());
-            ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", contact.AppUserId);
+
             return View(contact);
         }
 
@@ -153,7 +145,7 @@ namespace CrucibleContactPro.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,CreatedDate,AppUserId,FirstName,LastName,DateOfBirth,Address1,Address2,City,State,ZipCode,EmailAddress,PhoneNumber,ImageBytes,ImageType,ImageFile")] Contact contact)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CreatedDate,AppUserId,FirstName,LastName,DateOfBirth,Address1,Address2,City,State,ZipCode,EmailAddress,PhoneNumber,ImageBytes,ImageType,ImageFile")] Contact contact, IEnumerable<int> selected)
         {
             if (id != contact.Id)
             {
@@ -179,6 +171,17 @@ namespace CrucibleContactPro.Controllers
 
                     _context.Update(contact);
                     await _context.SaveChangesAsync();
+
+                    // Handle Categories
+                    if (selected != null)
+                    {
+                        // Remove current categories
+                        await _addressBookService.RemoveCategoriesFromContactAsync(contact.Id);
+
+                        // Add the updated categories
+                        await _addressBookService.AddCategoriesToContactAsync(selected, contact.Id);
+                    }
+
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -193,7 +196,10 @@ namespace CrucibleContactPro.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AppUserId"] = new SelectList(_context.Users, "Id", "Id", contact.AppUserId);
+           
+            ViewData["CategoryList"] = await GetCategoriesListAsync(selected);
+            ViewData["StatesList"] = new SelectList(Enum.GetValues(typeof(States)).Cast<States>());
+            
             return View(contact);
         }
 
@@ -238,6 +244,15 @@ namespace CrucibleContactPro.Controllers
         private bool ContactExists(int id)
         {
             return (_context.Contacts?.Any(e => e.Id == id)).GetValueOrDefault();
+        }
+
+        private async Task<MultiSelectList> GetCategoriesListAsync(IEnumerable<int> categoryIds = null!)
+        {
+            string? appUserId = _userManager.GetUserId(User);
+
+            IEnumerable<Category> categories = await _context.Categories.Where(c => c.AppUserId == appUserId).ToListAsync();
+
+            return new MultiSelectList(categories, "Id", "CategoryName", categoryIds);
         }
     }
 }

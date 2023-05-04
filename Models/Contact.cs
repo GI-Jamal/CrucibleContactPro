@@ -40,11 +40,11 @@ namespace CrucibleContactPro.Models
 
         public string? City { get; set; }
 
-        public Enums.States State { get; set; }
+        public Enums.States? State { get; set; }
 
         [Display(Name = "Zip Code")]
         [DataType(DataType.PostalCode)]
-        public int ZipCode  { get; set; }
+        public int? ZipCode  { get; set; }
 
         [Required]
         [Display(Name = "Email Address")]
