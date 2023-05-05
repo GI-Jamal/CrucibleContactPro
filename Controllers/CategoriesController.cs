@@ -9,6 +9,8 @@ using CrucibleContactPro.Data;
 using CrucibleContactPro.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using System.Net.Mail;
 
 namespace CrucibleContactPro.Controllers
 {
@@ -17,11 +19,13 @@ namespace CrucibleContactPro.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
+        private readonly IEmailSender _emailService;
 
-        public CategoriesController(ApplicationDbContext context, UserManager<AppUser> userManager)
+        public CategoriesController(ApplicationDbContext context, UserManager<AppUser> userManager, IEmailSender emailService)
         {
             _context = context;
             _userManager = userManager;
+            _emailService = emailService;
         }
 
         // GET: Categories
@@ -54,6 +58,76 @@ namespace CrucibleContactPro.Controllers
             return View(category);
         }
 
+        // GET: Categories/EmailCategory
+
+        public async Task<IActionResult> EmailCategory(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            string? appUserId = _userManager.GetUserId(User);
+
+            Category? category = await _context.Categories.Where(c => c.AppUserId == appUserId).Include(c => c.Contacts).FirstOrDefaultAsync(c => c.Id == id);
+            
+            if (category == null)
+            {
+                return NotFound();
+            }
+
+            IEnumerable<string?> emails = category.Contacts.Select(c => c.EmailAddress);
+
+            EmailData emailData = new EmailData()
+            {
+                GroupName = category.CategoryName,
+                EmailAddress = string.Join(";", emails),
+                EmailSubject = $"Group Message: {category.CategoryName}"
+            };
+
+            return View(emailData);
+
+        }
+
+        // POST: Categories/EmailCategory
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EmailCategory(EmailData emailData)
+        {
+            if (ModelState.IsValid)
+            {
+                string? swalMessage = string.Empty;
+
+                try
+                {
+                    string? subject = emailData.EmailSubject;
+                    string? htmlMessage = emailData.EmailBody;
+                    string[] emails = emailData.EmailAddress!.Split(";");
+
+
+                    foreach (string email in emails)
+                    {
+                        await _emailService.SendEmailAsync(email, subject!, htmlMessage!);
+
+                    }
+
+
+                    swalMessage = "Success: Emails Sent!";
+                    return RedirectToAction(nameof(Index), "Contacts", new { swalMessage = swalMessage });
+
+                }
+                catch (Exception)
+                {
+
+                    swalMessage = "Error: Failed to Send!";
+                    return RedirectToAction(nameof(Index), "Contacts", new { swalMessage = swalMessage });
+                }
+            }
+            return View(emailData);
+        }
+
+
         // GET: Categories/Create
         public IActionResult Create()
         {
@@ -68,11 +142,11 @@ namespace CrucibleContactPro.Controllers
         public async Task<IActionResult> Create([Bind("Id,CategoryName")] Category category)
         {
             ModelState.Remove("AppUserId");
-            
+
             if (ModelState.IsValid)
             {
                 category.AppUserId = _userManager.GetUserId(User);
-                
+
                 _context.Add(category);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
