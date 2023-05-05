@@ -72,7 +72,7 @@ namespace CrucibleContactPro.Data
                 if (user == null)
                 {
                     // TODO: Use Environment Variable
-                    await userManagerSvc.CreateAsync(demoUser);
+                    await userManagerSvc.CreateAsync(demoUser, "P@ssword123");
                 }
             }
             catch (Exception ex)
