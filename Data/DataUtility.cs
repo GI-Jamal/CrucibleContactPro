@@ -13,14 +13,7 @@ namespace CrucibleContactPro.Data
             string? databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 
             return string.IsNullOrEmpty(databaseUrl) ? connectionString! : BuildConnectionString(databaseUrl);
-            //if (string.IsNullOrEmpty(databaseUrl))
-            //{
-            //    return connectionString;
-            //}
-            //else
-            //{
-            //    return BuildConnectionString(databaseUrl);
-            //}
+            
         }
         private static string BuildConnectionString(string databaseUrl)
         {
@@ -44,22 +37,27 @@ namespace CrucibleContactPro.Data
             // Obtaining the necessary services based on the IServiceProvider parameter
             var dbContextSvc = svcProvider.GetRequiredService<ApplicationDbContext>();
             var userManagerSvc = svcProvider.GetRequiredService<UserManager<AppUser>>();
+            var configurationSvc = svcProvider.GetRequiredService<IConfiguration>();
 
             // Align the database by checking the Migrations
             await dbContextSvc.Database.MigrateAsync();
 
             // Seed Demo User(s)
-            await SeedDemoUsersAsync(userManagerSvc);
+            await SeedDemoUsersAsync(userManagerSvc, configurationSvc);
         }
 
 
         // Demo Users Seed Method
-        private static async Task SeedDemoUsersAsync(UserManager<AppUser> userManagerSvc)
+        private static async Task SeedDemoUsersAsync(UserManager<AppUser> userManagerSvc, IConfiguration configuration)
         {
-            AppUser demoUser = new AppUser()
+            string? demoEmail = configuration["DemoLoginEmail"] ?? Environment.GetEnvironmentVariable("DemoLoginEmail");
+            string? demoPassword = configuration["DemoLoginPassword"] ?? Environment.GetEnvironmentVariable("DemoLoginPassword");
+            
+
+            AppUser? demoUser = new AppUser()
             {
-                UserName = "demologin@example.com",
-                Email = "demologin@example.com",
+                UserName = demoEmail,
+                Email = demoEmail,
                 FirstName = "Demo",
                 LastName = "User",
                 EmailConfirmed = true,
@@ -67,12 +65,11 @@ namespace CrucibleContactPro.Data
 
             try
             {
-                AppUser? user = await userManagerSvc.FindByEmailAsync(demoUser.Email);
+                AppUser? user = await userManagerSvc.FindByEmailAsync(demoUser.Email!);
 
                 if (user == null)
                 {
-                    // TODO: Use Environment Variable
-                    await userManagerSvc.CreateAsync(demoUser, "P@ssword123");
+                    await userManagerSvc.CreateAsync(demoUser, demoPassword!);
                 }
             }
             catch (Exception ex)

@@ -63,7 +63,8 @@ namespace CrucibleContactPro.Controllers
             }
 
             // Get Categories
-            ViewData["Categories"] = await GetCategoriesListAsync();
+            List<int> filter = new List<int> { categoryId ?? 0 };
+            ViewData["Categories"] = await GetCategoriesListAsync(filter);
 
             return View(contacts);
         }
