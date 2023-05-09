@@ -1,24 +1,5 @@
-html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
-body {
-  margin-bottom: 60px;
+main {
+    flex-grow: 1;
 }
 
 :root {
@@ -85,25 +66,25 @@ figcaption {
     text-align: center;
 }
 
-/*
+
 html,
 body {
     height: 100%;
 }
 
-body {*/
+body {
     /* fallback for old browsers */
-    /*background-color: var(--cf-primaryColorLight);
+    background-color: var(--cf-primaryColorLight);
     display: flex;
     flex-direction: column;
     color: var(--cf-dark-color);
     font-family: var(--cf-body-font);
     font-weight: 400;
     font-size: 1.2rem;
-}*/
+}
 /*--Button Overrides --*/
 /*-- Button styles override Bootstrap Styles --*/
-/*.btn-outline-primary {
+.btn-outline-primary {
     color: var(--cf-dark-color);
     border-color: var(--cf-primaryColor) !important;
 }
@@ -211,9 +192,12 @@ main {
     font-size: 3.5rem;
 }
 
-.footer {
+footer {
     flex-shrink: 0;
     background-color: var(--cf-secondaryColor);
+    height: 50px;
+    display: flex;
+    align-items: center;
 }
 
 .copyright {
@@ -233,10 +217,10 @@ main {
         cursor: pointer;
     }
 
-*/
+
 /* X-Large devices (large desktops, 1200px and up) */
-/*@media (min-width: 1200px) {
+@media (min-width: 1200px) {
     .heroTitle {
         font-size: 3.5rem;
     }
-}*/
+}
