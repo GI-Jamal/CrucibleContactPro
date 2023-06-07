@@ -68,16 +68,16 @@
                                             }
                                             @if (!string.IsNullOrEmpty(contact.City))
                                             {
-                                                @contact.City
+                                                <span>@contact.City, </span>
                                             }
                                             @if (contact.State != null)
                                             {
-                                                @contact.State
+                                                <span>@contact.State, </span>
 
                                             }
                                             @if (contact.ZipCode != null)
                                             {
-                                                @contact.ZipCode
+                                                <span>@contact.ZipCode</span>
                                             }
                                         </address>
                                         <div class="card-text">
